@@ -7,32 +7,95 @@ import com.google.gson.Gson;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.net.*;
+import java.nio.Buffer;
 import java.util.ArrayList;
 
 public class App {
-
-    public static Quote sayQuote(){
+    private static String getQuote(){
         try {
+            String url_path = "http://ron-swanson-quotes.herokuapp.com/v2/quotes";
+            URL url = new URL(url_path);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String input;
+            StringBuilder content = new StringBuilder();
+            while((input = in.readLine()) != null){
+                content.append(input);
+            }
+            in.close();
 
-            // provide file path as the parameter
+            Gson gson = new Gson();
+            String[] quote = gson.fromJson(content.toString(), String[].class);
+            return quote[0];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    };
+    private static void addQuote(Quote quoteToAdd){
+        try {
             File file = new File("src/main/resources/recentquotes.json");
             BufferedReader reader = new BufferedReader(new FileReader(file));
-
-
             Gson gson = new Gson();
             String fromFileStream;
             String stringAccumulator = "";
             //https://www.geeksforgeeks.org/different-ways-reading-text-file-java/
-            while ((fromFileStream = reader.readLine()) != null){
+            while ((fromFileStream = reader.readLine()) != null) {
                 stringAccumulator += fromFileStream;
             }
             Quote[] parsedJson = gson.fromJson(stringAccumulator, Quote[].class);
+            Quote[] updatedQuotes = new Quote[parsedJson.length+1];
+            for( int i = 0; i < parsedJson.length; i++){
+                updatedQuotes[i] = parsedJson[i];
+            }
+            updatedQuotes[updatedQuotes.length-1] = quoteToAdd;
+            //https://www.baeldung.com/java-write-to-file
 
-            int randomIndex = (int) Math.floor(Math.random() * parsedJson.length) +1;
-            Quote result = parsedJson[(randomIndex)];
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(gson.toJson(updatedQuotes));
+            writer.close();
 
-            return result;
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
+    }
+    public static Quote sayQuote(){
+
+        try {
+
+            String swansonQuote = getQuote();
+            if (swansonQuote == null) {
+                // provide file path as the parameter
+                File file = new File("src/main/resources/recentquotes.json");
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+
+
+                Gson gson = new Gson();
+                String fromFileStream;
+                String stringAccumulator = "";
+                //https://www.geeksforgeeks.org/different-ways-reading-text-file-java/
+                while ((fromFileStream = reader.readLine()) != null) {
+                    stringAccumulator += fromFileStream;
+                }
+                Quote[] parsedJson = gson.fromJson(stringAccumulator, Quote[].class);
+
+                int randomIndex = (int) Math.floor(Math.random() * parsedJson.length) + 1;
+                Quote result = parsedJson[(randomIndex)];
+
+                return result;
+            }
+            else {
+                ArrayList<String> tags = new ArrayList<>();
+                String author = "Ron Swanson";
+                String likes = "";
+                String text = swansonQuote;
+                Quote newSwanQuote = new Quote(tags, author, likes, text);
+                addQuote(newSwanQuote);
+                return newSwanQuote;
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

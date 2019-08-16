@@ -19,10 +19,13 @@ public class AppTest {
         assertNotNull("Quote should be a string",result.author);
         assertNotNull("Quote should be a string",result.tags);
         assertNotNull("Quote should be a string",result.likes);
-
-       assertTrue("Text should have some value and a number of characters greater then zero", result.text.split("").length > 0);
-       assertTrue("Author field should have some value and a number of characters greater then zero", result.author.split("").length > 0);
+        assertTrue("Text should have some value and a number of characters greater then zero", result.text.split("").length > 0);
+        assertTrue("Author field should have some value and a number of characters greater then zero", result.author.split("").length > 0);
 
     }
-
+    @Test public void test_quoteShouldBeByRonSwanson(){
+        App classUnderTest = new App();
+        Quote result = classUnderTest.sayQuote();
+        assertTrue("We should say what ron says", result.author.equals("Ron Swanson"));
+    }
 }
